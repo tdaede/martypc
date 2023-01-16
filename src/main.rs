@@ -88,6 +88,7 @@ pub const FPS_TARGET: f64 = 60.0;
 const MICROS_PER_FRAME: f64 = 1.0 / FPS_TARGET * 1000000.0;
 const CYCLES_PER_FRAME: u32 = (cpu::CPU_MHZ * 1000000.0 / FPS_TARGET) as u32;
 
+
 // Rendering Stats
 struct Counter {
     frame_count: u64,
@@ -102,7 +103,8 @@ struct Counter {
     current_pit_tps: u64,
     emulation_time: Duration,
     render_time: Duration,
-    accumulated_us: u128
+    accumulated_us: u128,
+    cycle_target: u32
 }
 
 impl Counter {
@@ -120,7 +122,8 @@ impl Counter {
             current_pit_tps: 0,
             emulation_time: Duration::ZERO,
             render_time: Duration::ZERO,
-            accumulated_us: 0
+            accumulated_us: 0,
+            cycle_target: CYCLES_PER_FRAME
         }
     }
 }
@@ -662,8 +665,25 @@ fn main() -> Result<(), Error> {
 
                     // Emulate a frame worth of instructions
                     let emulation_start = Instant::now();
-                    machine.run(CYCLES_PER_FRAME, &mut exec_control.borrow_mut(), bp_addr);
+                    machine.run(stat_counter.cycle_target, &mut exec_control.borrow_mut(), bp_addr);
                     stat_counter.emulation_time = Instant::now() - emulation_start;
+
+                    // If emulation time took too long, reduce CYCLE_TARGET
+
+                    if stat_counter.emulation_time.as_millis() > 16 {
+                        // Emulation running slower than 60fps
+                        let factor: f64 = (stat_counter.emulation_time.as_millis() as f64) / 16.0;
+                        stat_counter.cycle_target = (stat_counter.cycle_target as f64 / (factor / 2.0)) as u32;
+
+                        log::trace!("Emulation speed slow: ({}ms). Reducing cycle target: {}", stat_counter.emulation_time.as_millis(), stat_counter.cycle_target);
+                    }
+                    else {
+                        // Emulation could be faster
+                        log::trace!("Emulation speed recovering. ({}ms). Increasing cycle target: {}" , stat_counter.emulation_time.as_millis(), stat_counter.cycle_target);
+                        let factor: f64 = (stat_counter.emulation_time.as_millis() as f64) / 16.0;
+                        stat_counter.cycle_target = (stat_counter.cycle_target as f64 / (factor / 2.0)) as u32;
+                    }
+
 
                     // Do per-frame updates (Serial port emulation)
                     machine.frame_update();

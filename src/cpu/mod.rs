@@ -4,7 +4,9 @@ use std::{
     cell::RefCell,
     collections::VecDeque,
     error::Error,
-    fmt
+    fs::{File},
+    fmt,
+    io::Write
 };
 
 use core::fmt::Display;
@@ -439,7 +441,9 @@ pub struct Cpu {
     reset_seg: u16,
     reset_offset: u16,
     
-    opcode0_counter: u32
+    opcode0_counter: u32,
+
+    i_log_file: Option<File>
 }
 
 pub struct CpuRegisterState {
@@ -567,6 +571,8 @@ impl Cpu {
         cpu.reset_seg = 0xFFFF;
         cpu.reset_offset = 0x0000;
         cpu.reset();
+
+        cpu.i_log_file = Some(File::create("instruction.log").expect("Couldn't open log file"));
         cpu
     }
 
@@ -1370,6 +1376,7 @@ impl Cpu {
                 self.instruction_history.push_back(self.i);
                 self.instruction_count += 1;
                 check_interrupts = true;
+                self.log_instruction();
                 Ok(())
             }
             ExecutionResult::OkayJump => {
@@ -1384,6 +1391,7 @@ impl Cpu {
                 self.instruction_history.push_back(self.i);
                 self.instruction_count += 1;
                 check_interrupts = true;
+                self.log_instruction();
                 Ok(())
             }
             ExecutionResult::OkayRep => {
@@ -1396,6 +1404,7 @@ impl Cpu {
                 self.instruction_history.push_back(self.i);
                 self.instruction_count += 1;
                 check_interrupts = true;
+                //self.log_instruction();
                 Ok(())
             }                    
             ExecutionResult::UnsupportedOpcode(o) => {
@@ -1482,6 +1491,16 @@ impl Cpu {
         }
 
         call_stack_string
+    }
+    
+    pub fn log_instruction(&mut self) {
+
+            write!(self.i_log_file.as_ref().unwrap(), "{:04x}:{:04x} {}\n", self.cs, self.ip, self.i);
+            write!(self.i_log_file.as_ref().unwrap(), "AX: {:04x} BX: {:04x} CX: {:04x} DX: {:04x}\n", self.ax, self.bx, self.cx, self.dx);
+            write!(self.i_log_file.as_ref().unwrap(), "SP: {:04x} BP: {:04x} SI: {:04x} DI: {:04x}\n", self.sp, self.bp, self.si, self.di);
+            write!(self.i_log_file.as_ref().unwrap(), "CS: {:04x} DS: {:04x} ES: {:04x} SS: {:04x}\n", self.cs, self.ds, self.es, self.ss);
+            write!(self.i_log_file.as_ref().unwrap(), "IP: {:04x} FLAGS: {:04x}\n", self.ip, self.flags);
+
     }
 
     pub fn assert_state(&self) {
