@@ -17,6 +17,7 @@ use crate::config::VideoType;
 use crate::pic::*;
 use crate::dma::*;
 use crate::ppi::*;
+use crate::sampler::{Sampler, SampleFilter};
 use crate::serial::*;
 use crate::hdc::*;
 use crate::mouse::*;
@@ -984,7 +985,7 @@ impl BusInterface {
     
     }
 
-    pub fn run_devices(&mut self, us: f64, kb_byte_opt: Option<u8>, speaker_buf_producer: &mut Producer<u8>) {
+    pub fn run_devices(&mut self, us: f64, kb_byte_opt: Option<u8>, audio_sampler: &mut Sampler) {
 
         // Send keyboard events to devices.
         if let Some(kb_byte) = kb_byte_opt {
@@ -1010,7 +1011,7 @@ impl BusInterface {
 
         // Run the PIT. The PIT communicates with lots of things, so we send it the entire 
         // bus.
-        pit.run(self, speaker_buf_producer, us);
+        pit.run(self, audio_sampler, us);
 
         // Put the PIT back.
         self.pit = Some(pit);

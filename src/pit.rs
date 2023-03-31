@@ -32,8 +32,7 @@ use std::collections::BTreeMap;
 use modular_bitfield::prelude::*;
 
 use crate::bus::{BusInterface, IoDevice};
-use crate::cpu_808x::CPU_MHZ;
-
+use crate::sampler::Sampler;
 use crate::syntax_token::*;
 use crate::updatable::*;
 
@@ -648,7 +647,7 @@ impl Channel {
         self.count();
     }
 
-    pub fn tick(&mut self, bus: &mut BusInterface, buffer_producer: &mut ringbuf::Producer<u8>) {
+    pub fn tick(&mut self, bus: &mut BusInterface) {
 
         if self.channel_state == ChannelState::WaitingForLoadCycle {
             // Load the current reload value into the counting element, applying the load mask
@@ -913,7 +912,7 @@ impl ProgrammableIntervalTimer {
     pub fn run(
         &mut self, 
         bus: &mut BusInterface, 
-        buffer_producer: &mut ringbuf::Producer<u8>,
+        audio_sampler: &mut Sampler,
         us: f64 ) {
 
         let mut pit_cycles = Pit::get_pit_cycles(us);
@@ -926,7 +925,7 @@ impl ProgrammableIntervalTimer {
             // by ticking the PIT until the accumulator drops below 1.0.
             pit_cycles += 1.0;
             self.cycle_accumulator -= 1.0;
-            self.tick(bus, buffer_producer);
+            self.tick(bus, audio_sampler);
         }        
     }
 
@@ -941,7 +940,7 @@ impl ProgrammableIntervalTimer {
     pub fn tick(
         &mut self,
         bus: &mut BusInterface,
-        buffer_producer: &mut ringbuf::Producer<u8>) 
+        audio_sampler: &mut Sampler) 
     {
         self.pit_cycles += 1;
 
@@ -951,11 +950,11 @@ impl ProgrammableIntervalTimer {
         }
 
         for (i, c) in self.channels.iter_mut().enumerate() {
-            c.tick(bus, buffer_producer);
+            c.tick(bus);
 
+            // Submit an audio sample for the output state of Channel #2, connected to PC speaker.
             if i == 2 {
-
-                _ = buffer_producer.push(*c.output as u8);
+                audio_sampler.submit((*c.output) as u32 as f32);
             }
         }
     }

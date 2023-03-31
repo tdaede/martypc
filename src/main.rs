@@ -62,6 +62,7 @@ mod pic;
 mod pit;
 mod ppi;
 mod rom_manager;
+mod sampler;
 mod serial;
 mod sound;
 mod syntax_token;
@@ -1201,8 +1202,8 @@ fn main() {
                         let pit_state = machine.pit_state();
                         framework.gui.update_pit_state(&pit_state);
 
-                        let pit_data = machine.get_pit_buf();
-                        framework.gui.pit_viewer.update_channel_data(2, &pit_data);
+                        //let pit_data = machine.get_pit_buf();
+                        //framework.gui.pit_viewer.update_channel_data(2, &pit_data);
                     }
 
                     // -- Update PIC viewer window

@@ -56,9 +56,9 @@ impl SoundPlayer {
         
         let min_buffer = ((BUFFER_MS / 1000.0) / (1.0 / sample_rate as f32)) as usize;
         log::trace!("Minimum sample buffer size: {}", min_buffer);
-        //let buffer_size = (sample_rate as f32 * (BUFFER_MS as f32 / 1000.0)) as usize;
+        
+        let buffer_size = (sample_rate as f32 * (BUFFER_MS as f32 / 1000.0)) as usize;
 
-        let buffer_size = sample_rate;
         let buffer = RingBuffer::new(buffer_size as usize );
         let (buffer_producer, mut buffer_consumer) = buffer.split();
 
@@ -87,7 +87,7 @@ impl SoundPlayer {
                     s
                 }
                 None => {
-                    //log::trace!("Buffer underrun");
+                    log::warn!("Buffer underrun");
                     refill_buffer = true;
                     0.0
                 }
