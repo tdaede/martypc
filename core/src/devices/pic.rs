@@ -38,8 +38,8 @@ use crate::bus::{BusInterface, DeviceRunTimeUnit, IoDevice};
 
 //pub const PIC_INTERRUPT_OFFSET: u8 = 8;
 
-pub const PIC_COMMAND_PORT: u16 = 0x20;
-pub const PIC_DATA_PORT: u16 = 0x21;
+pub const PIC_COMMAND_PORT: u16 = 0x00;
+pub const PIC_DATA_PORT: u16 = 0x02;
 
 const ICW1_ICW4_NEEDED: u8 = 0b0000_0001; // Bit set if a 4th control world is required (not supported)
 const ICW1_SINGLE_MODE: u8 = 0b0000_0010; // Bit is set if PIC is operating in single mode (only supported configuration)

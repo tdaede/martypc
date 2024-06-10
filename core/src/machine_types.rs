@@ -43,6 +43,7 @@ pub enum MachineType {
     Ibm5160,
     IbmPCJr,
     Tandy1000,
+    NecPC9801F,
 }
 
 impl FromStr for MachineType {
@@ -58,6 +59,7 @@ impl FromStr for MachineType {
             "ibm5160" => Ok(MachineType::Ibm5160),
             "ibm_pcjr" => Ok(MachineType::IbmPCJr),
             "tandy1000" => Ok(MachineType::Tandy1000),
+            "necpc9801f" => Ok(MachineType::NecPC9801F),
             _ => Err("Bad value for model".to_string()),
         }
     }

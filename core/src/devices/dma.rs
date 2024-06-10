@@ -32,34 +32,34 @@
 
 use crate::bus::{BusInterface, DeviceRunTimeUnit, IoDevice};
 
-pub const DMA_CHANNEL_0_ADDR_PORT: u16 = 0x00; // R/W
-pub const DMA_CHANNEL_0_WC_PORT: u16 = 0x01; // R/W
-pub const DMA_CHANNEL_1_ADDR_PORT: u16 = 0x02; // R/W
-pub const DMA_CHANNEL_1_WC_PORT: u16 = 0x03; // R/W
-pub const DMA_CHANNEL_2_ADDR_PORT: u16 = 0x04; // R/W
-pub const DMA_CHANNEL_2_WC_PORT: u16 = 0x05; // R/W
-pub const DMA_CHANNEL_3_ADDR_PORT: u16 = 0x06; // R/W
-pub const DMA_CHANNEL_3_WC_PORT: u16 = 0x07; // R/W
+pub const DMA_CHANNEL_0_ADDR_PORT: u16 = 0x01; // R/W
+pub const DMA_CHANNEL_0_WC_PORT: u16 = 0x03; // R/W
+pub const DMA_CHANNEL_1_ADDR_PORT: u16 = 0x05; // R/W
+pub const DMA_CHANNEL_1_WC_PORT: u16 = 0x07; // R/W
+pub const DMA_CHANNEL_2_ADDR_PORT: u16 = 0x09; // R/W
+pub const DMA_CHANNEL_2_WC_PORT: u16 = 0x0b; // R/W
+pub const DMA_CHANNEL_3_ADDR_PORT: u16 = 0x0d; // R/W
+pub const DMA_CHANNEL_3_WC_PORT: u16 = 0x0f; // R/W
 
 // Status/Command register depending on read/write
-pub const DMA_STATUS_REGISTER: u16 = 0x08; // R
-pub const DMA_COMMAND_REGISTER: u16 = 0x08; // W
-pub const DMA_WRITE_REQ_REGISTER: u16 = 0x09; // W
-pub const DMA_CHANNEL_MASK_REGISTER: u16 = 0x0A; // R/W
-pub const DMA_CHANNEL_MODE_REGISTER: u16 = 0x0B; // R/W
-pub const DMA_CLEAR_FLIPFLOP: u16 = 0x0C; // W
+pub const DMA_STATUS_REGISTER: u16 = 0x11; // R
+pub const DMA_COMMAND_REGISTER: u16 = 0x11; // W
+pub const DMA_WRITE_REQ_REGISTER: u16 = 0x13; // W
+pub const DMA_CHANNEL_MASK_REGISTER: u16 = 0x15; // R/W
+pub const DMA_CHANNEL_MODE_REGISTER: u16 = 0x17; // R/W
+pub const DMA_CLEAR_FLIPFLOP: u16 = 0x19; // W
 
 // Read Temp/Master Clear register depending on read/write
-pub const DMA_READ_TEMP_REGISTER: u16 = 0x0D; // R
-pub const DMA_MASTER_CLEAR: u16 = 0x0D; // W
-pub const DMA_CLEAR_MASK_REGISTER: u16 = 0x0E; // W
-pub const DMA_WRITE_MASK_REGISTER: u16 = 0x0F; // W
+pub const DMA_READ_TEMP_REGISTER: u16 = 0x1b; // R
+pub const DMA_MASTER_CLEAR: u16 = 0x1b; // W
+pub const DMA_CLEAR_MASK_REGISTER: u16 = 0x1d; // W
+pub const DMA_WRITE_MASK_REGISTER: u16 = 0x1f; // W
 
 // The following page registers are not in logical order (why?)
-pub const DMA_CHANNEL_0_PAGE_REGISTER: u16 = 0x87; // R/W
-pub const DMA_CHANNEL_1_PAGE_REGISTER: u16 = 0x83; // R/W
-pub const DMA_CHANNEL_2_PAGE_REGISTER: u16 = 0x81; // R/W
-pub const DMA_CHANNEL_3_PAGE_REGISTER: u16 = 0x82; // R/W
+pub const DMA_CHANNEL_0_PAGE_REGISTER: u16 = 0x27; // R/W
+pub const DMA_CHANNEL_1_PAGE_REGISTER: u16 = 0x23; // R/W
+pub const DMA_CHANNEL_2_PAGE_REGISTER: u16 = 0x21; // R/W
+pub const DMA_CHANNEL_3_PAGE_REGISTER: u16 = 0x25; // R/W
 
 // Control byte bit fields - not all of these are implemented
 pub const DMA_COMMAND_MEM_TO_MEM: u8 = 0x01;

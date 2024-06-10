@@ -45,10 +45,10 @@ use crate::{
 
 pub type PitDisplayState = Vec<BTreeMap<&'static str, SyntaxToken>>;
 
-pub const PIT_CHANNEL_0_DATA_PORT: u16 = 0x40;
-pub const PIT_CHANNEL_1_DATA_PORT: u16 = 0x41;
-pub const PIT_CHANNEL_2_DATA_PORT: u16 = 0x42;
-pub const PIT_COMMAND_REGISTER: u16 = 0x43;
+pub const PIT_CHANNEL_0_DATA_PORT: u16 = 0x71;
+pub const PIT_CHANNEL_1_DATA_PORT: u16 = 0x73;
+pub const PIT_CHANNEL_2_DATA_PORT: u16 = 0x75;
+pub const PIT_COMMAND_REGISTER: u16 = 0x77;
 
 /*
 const PIT_CHANNEL_SELECT_MASK: u8 = 0b1100_0000;

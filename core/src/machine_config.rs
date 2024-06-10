@@ -461,6 +461,14 @@ lazy_static! {
                     game_port: Some(GAME_PORT_DEFAULT_IO),
                     ..Default::default()
                 },
+            ),
+            (
+                MachineType::NecPC9801F,
+                MachineDescriptor {
+                    machine_type: MachineType::NecPC9801F,
+                    have_ppi: false,
+                    ..Default::default()
+                },
             )
         ]);
         map

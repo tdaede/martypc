@@ -1834,6 +1834,8 @@ impl BusInterface {
         // Tie gates for pit channel 0 & 1 high.
         pit.set_channel_gate(0, true, self);
         pit.set_channel_gate(1, true, self);
+        // PC98: tie channel 2 high.
+        pit.set_channel_gate(2, true, self);
 
         self.pit = Some(pit);
 

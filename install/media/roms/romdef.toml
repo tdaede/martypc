@@ -170,3 +170,14 @@ rom = [
     #{ filename = "bios-xi8088-noide.rom", addr = 0xF0000, size = 0x10000 }, 
     { filename = "bios-xt.bin", addr = 0xFC000, size = 0x4000 }, 
 ]
+
+# ----------------------------------------------------------------------------
+# PC-98 ROMs
+# ----------------------------------------------------------------------------
+[[romset]]
+alias = "pc9801f"
+priority = 1
+provides = ["bios", "ibm5160"]
+rom = [ 
+    { filename = "bios.bin", addr = 0xe8000, size = 0x18000 },
+]
