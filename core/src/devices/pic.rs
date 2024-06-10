@@ -38,9 +38,6 @@ use crate::bus::{BusInterface, DeviceRunTimeUnit, IoDevice};
 
 //pub const PIC_INTERRUPT_OFFSET: u8 = 8;
 
-pub const PIC_COMMAND_PORT: u16 = 0x00;
-pub const PIC_DATA_PORT: u16 = 0x02;
-
 const ICW1_ICW4_NEEDED: u8 = 0b0000_0001; // Bit set if a 4th control world is required (not supported)
 const ICW1_SINGLE_MODE: u8 = 0b0000_0010; // Bit is set if PIC is operating in single mode (only supported configuration)
 const ICW1_ADI: u8 = 0b0000_0100; // Bit is set if PIC is using a call address interval of 4, otherwise 8
@@ -125,6 +122,9 @@ pub struct Pic {
     interrupt_stats: Vec<InterruptStats>,
     intr_scheduled: bool,
     intr_timer: u32,
+
+    command_port: u16,
+    data_port: u16,
 }
 
 impl Default for Pic {
@@ -154,6 +154,9 @@ impl Default for Pic {
             interrupt_stats: vec![InterruptStats::new(); 8],
             intr_scheduled: false,
             intr_timer: 0,
+
+            command_port: 0x00,
+            data_port: 0x02,
         }
     }
 }
@@ -173,39 +176,47 @@ pub struct PicStringState {
 
 impl IoDevice for Pic {
     fn read_u8(&mut self, port: u16, _delta: DeviceRunTimeUnit) -> u8 {
-        match port {
-            PIC_COMMAND_PORT => self.handle_command_register_read(),
-            PIC_DATA_PORT => self.handle_data_register_read(),
-            _ => unreachable!("PIC: Bad port #"),
+        if port == self.command_port {
+            self.handle_command_register_read()
+        } else if port == self.data_port {
+            self.handle_data_register_read()
+        } else {
+            unreachable!("PIC: Bad port #")
         }
     }
     fn write_u8(&mut self, port: u16, data: u8, _bus: Option<&mut BusInterface>, _delta: DeviceRunTimeUnit) {
-        match port {
-            PIC_COMMAND_PORT => {
-                self.handle_command_register_write(data);
-            }
-            PIC_DATA_PORT => {
-                self.handle_data_register_write(data);
-            }
-            _ => unreachable!("PIC: Bad port #"),
-        }
+        if port == self.command_port {
+            self.handle_command_register_write(data)
+        } else if port == self.data_port {
+            self.handle_data_register_write(data)
+        } else {
+            unreachable!("PIC: Bad port #")
+        };
     }
 
     fn port_list(&self) -> Vec<(String, u16)> {
         vec![
-            (String::from("PIC Command Port"), PIC_COMMAND_PORT),
-            (String::from("PIC Data Port"), PIC_DATA_PORT),
+            (String::from("PIC Command Port"), self.command_port),
+            (String::from("PIC Data Port"), self.data_port),
         ]
     }
 }
 
 impl Pic {
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(command_port: u16, data_port: u16) -> Self {
+        Self {
+            command_port,
+            data_port,
+            ..Default::default()
+        }
     }
 
     pub fn reset(&mut self) {
-        *self = Default::default();
+        *self = Self {
+            command_port: self.command_port,
+            data_port: self.data_port,
+            ..Default::default()
+        }
     }
 
     pub fn handle_command_register_write(&mut self, byte: u8) {

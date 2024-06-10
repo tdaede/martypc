@@ -1847,10 +1847,14 @@ impl BusInterface {
         self.dma1 = Some(dma1);
 
         // Create PIC. One PIC will always exist.
-        let pic1 = Pic::new();
+        let pic1 = Pic::new(0x00, 0x02);
         // Add PIC ports to io_map
         add_io_device!(self, pic1, IoDeviceType::PicPrimary);
         self.pic1 = Some(pic1);
+        let pic2 = Pic::new(0x08, 0x0a);
+        // Add PIC ports to io_map
+        add_io_device!(self, pic2, IoDeviceType::PicSecondary);
+        self.pic2 = Some(pic2);
 
         // Create keyboard if specified.
         if let Some(kb_config) = &machine_config.keyboard {
@@ -2452,6 +2456,11 @@ impl BusInterface {
         // Reset PIC
         if let Some(pic1) = self.pic1.as_mut() {
             pic1.reset();
+        }
+
+        // Reset PIC
+        if let Some(pic2) = self.pic2.as_mut() {
+            pic2.reset();
         }
 
         // Reset DMA
