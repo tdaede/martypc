@@ -52,6 +52,7 @@ use crate::{
     },
     devices::{
         cga::{self, CGACard},
+        pc98_graphics::*,
         dma::*,
         fdc::FloppyController,
         hdc::*,
@@ -920,6 +921,10 @@ impl BusInterface {
                                     let syswait = vga.get_read_wait(address, system_ticks);
                                     return Ok(self.system_ticks_to_cpu_cycles(syswait));
                                 }
+                                VideoCardDispatch::PC98(pc98) => {
+                                    let syswait = pc98.get_read_wait(address, system_ticks);
+                                    return Ok(self.system_ticks_to_cpu_cycles(syswait));
+                                }
                                 _ => {}
                             }
                         }
@@ -971,6 +976,10 @@ impl BusInterface {
                                 #[cfg(feature = "vga")]
                                 VideoCardDispatch::Vga(vga) => {
                                     let syswait = vga.get_write_wait(address, system_ticks);
+                                    return Ok(self.system_ticks_to_cpu_cycles(syswait));
+                                }
+                                VideoCardDispatch::PC98(pc98) => {
+                                    let syswait = pc98.get_write_wait(address, system_ticks);
                                     return Ok(self.system_ticks_to_cpu_cycles(syswait));
                                 }
                                 _ => {}
@@ -1033,6 +1042,11 @@ impl BusInterface {
                                 VideoCardDispatch::Vga(vga) => {
                                     let (data, _waits) =
                                         MemoryMappedDevice::mmio_read_u8(vga, address, system_ticks, None);
+                                    return Ok((data, 0));
+                                }
+                                VideoCardDispatch::PC98(pc98) => {
+                                    let (data, _waits) =
+                                        MemoryMappedDevice::mmio_read_u8(pc98, address, system_ticks, None);
                                     return Ok((data, 0));
                                 }
                                 _ => {}
@@ -1104,6 +1118,10 @@ impl BusInterface {
                                     let data = MemoryMappedDevice::mmio_peek_u8(vga, address, None);
                                     return Ok(data);
                                 }
+                                VideoCardDispatch::PC98(pc98) => {
+                                    let data = MemoryMappedDevice::mmio_peek_u8(pc98, address, None);
+                                    return Ok(data);
+                                }
                                 _ => {}
                             }
                         }
@@ -1169,6 +1187,11 @@ impl BusInterface {
                                         MemoryMappedDevice::mmio_read_u16(vga, address, system_ticks, None);
                                     return Ok((data, 0));
                                 }
+                                VideoCardDispatch::PC98(pc98) => {
+                                    let (data, _syswait) =
+                                        MemoryMappedDevice::mmio_read_u16(pc98, address, system_ticks, None);
+                                    return Ok((data, 0));
+                                }
                                 _ => {}
                             }
                         }
@@ -1231,6 +1254,9 @@ impl BusInterface {
                                 #[cfg(feature = "vga")]
                                 VideoCardDispatch::Vga(vga) => {
                                     MemoryMappedDevice::mmio_write_u8(vga, address, data, system_ticks, None);
+                                }
+                                VideoCardDispatch::PC98(pc98) => {
+                                    MemoryMappedDevice::mmio_write_u8(pc98, address, data, system_ticks, None);
                                 }
                                 _ => {}
                             }
@@ -1333,6 +1359,15 @@ impl BusInterface {
                                         None,
                                     );
                                     MemoryMappedDevice::mmio_write_u8(vga, address + 1, (data >> 8) as u8, 0, None);
+                                }
+                                VideoCardDispatch::PC98(pc98) => {
+                                    MemoryMappedDevice::mmio_write_u16(
+                                        pc98,
+                                        address,
+                                        data,
+                                        system_ticks,
+                                        None,
+                                    );
                                 }
                                 _ => {}
                             }
@@ -2045,6 +2080,12 @@ impl BusInterface {
                     add_mmio_device!(self, vga, MmioDeviceType::Video(video_id));
                     video_dispatch = VideoCardDispatch::Vga(vga)
                 }
+                VideoType::PC98 => {
+                    let pc98 = PC98Graphics::new(TraceLogger::None, clock_mode, video_frame_debug);
+                    add_io_device!(self, pc98, IoDeviceType::Video(video_id));
+                    add_mmio_video!(self, pc98, MmioDeviceType::Video(video_id));
+                    video_dispatch = VideoCardDispatch::PC98(pc98)
+                }
                 #[allow(unreachable_patterns)]
                 _ => {
                     panic!(
@@ -2321,6 +2362,9 @@ impl BusInterface {
                 VideoCardDispatch::Vga(vga) => {
                     vga.run(DeviceRunTimeUnit::Microseconds(us), &mut self.pic1, None);
                 }
+                VideoCardDispatch::PC98(pc98) => {
+                    pc98.run(DeviceRunTimeUnit::Microseconds(us), &mut self.pic1, None);
+                }
                 VideoCardDispatch::None => {}
             }
         }
@@ -2589,6 +2633,9 @@ impl BusInterface {
                             VideoCardDispatch::Ega(ega) => Some(IoDevice::read_u8(ega, port, nul_delta)),
                             #[cfg(feature = "vga")]
                             VideoCardDispatch::Vga(vga) => Some(IoDevice::read_u8(vga, port, nul_delta)),
+                            VideoCardDispatch::PC98(pc98) => {
+                                Some(IoDevice::read_u8(pc98, port, DeviceRunTimeUnit::SystemTicks(sys_ticks)))
+                            }
                             VideoCardDispatch::None => None,
                         }
                     }
@@ -2759,6 +2806,10 @@ impl BusInterface {
                                 IoDevice::write_u8(vga, port, data, None, nul_delta);
                                 resolved = true;
                             }
+                            VideoCardDispatch::PC98(pc98) => {
+                                IoDevice::write_u8(pc98, port, data, None, DeviceRunTimeUnit::SystemTicks(sys_ticks));
+                                resolved = true;
+                            }
                             VideoCardDispatch::None => {}
                         }
                     }
@@ -2866,6 +2917,7 @@ impl BusInterface {
                 VideoCardDispatch::Ega(ega) => Some(Box::new(ega as &dyn VideoCard)),
                 #[cfg(feature = "vga")]
                 VideoCardDispatch::Vga(vga) => Some(Box::new(vga as &dyn VideoCard)),
+                VideoCardDispatch::PC98(pc98) => Some(Box::new(pc98 as &dyn VideoCard)),
                 VideoCardDispatch::None => None,
             }
         }
@@ -2884,6 +2936,7 @@ impl BusInterface {
                 VideoCardDispatch::Ega(ega) => Some(Box::new(ega as &mut dyn VideoCard)),
                 #[cfg(feature = "vga")]
                 VideoCardDispatch::Vga(vga) => Some(Box::new(vga as &mut dyn VideoCard)),
+                VideoCardDispatch::PC98(pc98) => Some(Box::new(pc98 as &mut dyn VideoCard)),
                 VideoCardDispatch::None => None,
             }
         }

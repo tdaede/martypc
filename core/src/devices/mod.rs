@@ -56,3 +56,4 @@ pub mod serial;
 pub mod tga;
 #[cfg(feature = "vga")]
 pub mod vga;
+pub mod pc98_graphics;

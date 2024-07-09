@@ -34,6 +34,7 @@ rodio.workspace = true
 fxhash.workspace = true
 enum_dispatch.workspace = true
 crossbeam-channel.workspace = true
+encoding_rs = "0.8.34"
 
 [dependencies.opl3-rs]
 git = "https://github.com/dbalsom/opl3-rs.git"

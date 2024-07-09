@@ -68,7 +68,7 @@ use crate::bus::DeviceRunTimeUnit;
 use crate::devices::ega::EGACard;
 #[cfg(feature = "vga")]
 use crate::devices::vga::VGACard;
-use crate::devices::{cga::CGACard, mda::MDACard, tga::TGACard};
+use crate::devices::{cga::CGACard, mda::MDACard, tga::TGACard, pc98_graphics::PC98Graphics};
 
 use crate::devices::pic::Pic;
 use serde::Deserialize;
@@ -85,6 +85,7 @@ pub enum VideoType {
     EGA,
     #[cfg(feature = "vga")]
     VGA,
+    PC98,
 }
 
 impl Default for VideoType {
@@ -107,6 +108,7 @@ impl FromStr for VideoType {
             "EGA" => Ok(VideoType::EGA),
             #[cfg(feature = "vga")]
             "VGA" => Ok(VideoType::VGA),
+            "PC98" => Ok(VideoType::PC98),
             _ => Err("Bad value for videotype".to_string()),
         }
     }
@@ -166,6 +168,7 @@ pub enum VideoCardDispatch {
     Ega(EGACard),
     #[cfg(feature = "vga")]
     Vga(VGACard),
+    PC98(PC98Graphics)
 }
 
 // This struct provides an identifier for a VideoCard, encapsulating a unique numeric id ('idx')

@@ -100,7 +100,7 @@ on_halt = "Warn"
 
 # Enable instruction history. This slows down the emulator a modest amount 
 # when enabled. Only enable if debugging.
-instruction_history = false
+instruction_history = true
 
 # Enable MartyPC's internal emulator serivce interrupt at 0xFC. You may need
 # to disable this if conflicts arise. 'mdebug.com' requires this to be set 
@@ -279,7 +279,7 @@ name = "Main GUI"
 # this size, or the video aperture resolution, whichever is higher.
 # It is useful to use this value for the main window, but for secondary
 # display windows, you may wish to use card_scale instead.
-size = { w = 1024, h = 768 }
+size = { w = 1280, h = 1024 }
 
 # If this window has a GUI menu, add the vertical height of the menu to the
 # window height, and adjust the scaler to display the emulated display 
