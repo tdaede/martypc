@@ -1,0 +1,56 @@
+# ibmpcjr.toml
+# Machine Configurations for the NEC PC98
+
+# MartyPC will search all *.toml files in 'machine' directories for machine
+# configurations, so if you create a custom machine configuration, you can 
+# put it in a separate file.
+#
+# ----------------------------------------------------------------------------
+# Defining a Machine Configuration  
+# Valid Machine types:
+#  "Ibm5150v64K"
+#  "Ibm5150v256K"
+#  "Ibm5160"
+#
+# Valid Floppy Disk Controller types:
+#  "IbmNec"
+#
+# Valid floppy Drive Types:
+#  "360k"
+#  "720k"
+#  "1.2m"
+#  "1.44m"
+
+# Valid Hard Disk Controller Types:
+#  "IbmXebec"
+#
+# Valid Serial Controller Types:
+#  "IbmAsync"
+#
+# Conventional memory amount may be different from value specified due to MMIO
+# optimizations. I recommend specifying a value in 0x10000 increments.
+# ----------------------------------------------------------------------------
+
+[[machine]]
+name = "pc9801f"
+type = "NecPC9801F"
+rom_set = "pc9801f"
+speaker = false
+
+    [machine.memory]
+    conventional.size = 0x20000 # 128KB max. Install additional RAM via sidecars
+    conventional.wait_states = 3
+
+    # Video cards - Maximum of 1.
+    [[machine.video]]
+    bus_type = "Onboard"
+    type = "PC98"
+    clock_mode = "Default"
+
+    # Floppy disk controller
+#    [machine.fdc]
+#        bus_type = "Onboard"
+#        type = "IbmPCJrNec"
+            # Drives connected to controller. Maximum of 1.
+#            [[machine.fdc.drive]]
+#            type  = "360k"

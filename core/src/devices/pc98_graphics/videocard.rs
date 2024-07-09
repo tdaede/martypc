@@ -106,10 +106,6 @@ impl VideoCard for PC98Graphics {
         &self.extents
     }
 
-    fn get_cga_palette(&self) -> (CGAPalette, bool) {
-        (Default::default(), false)
-    }
-
     fn list_display_apertures(&self) -> Vec<DisplayApertureDesc> {
         PC98_APERTURE_DESCS.to_vec()
     }
@@ -250,5 +246,9 @@ impl VideoCard for PC98Graphics {
     }
 
     fn trace_flush(&mut self) {
+    }
+
+    fn get_palette(&self) -> Option<Vec<[u8;4]>> {
+        None
     }
 }

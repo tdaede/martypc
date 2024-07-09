@@ -2083,7 +2083,7 @@ impl BusInterface {
                 VideoType::PC98 => {
                     let pc98 = PC98Graphics::new(TraceLogger::None, clock_mode, video_frame_debug);
                     add_io_device!(self, pc98, IoDeviceType::Video(video_id));
-                    add_mmio_video!(self, pc98, MmioDeviceType::Video(video_id));
+                    add_mmio_device!(self, pc98, MmioDeviceType::Video(video_id));
                     video_dispatch = VideoCardDispatch::PC98(pc98)
                 }
                 #[allow(unreachable_patterns)]
