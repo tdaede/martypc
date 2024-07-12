@@ -57,6 +57,7 @@ use crate::{
         fdc::FloppyController,
         hdc::*,
         keyboard::{KeyboardType, *},
+        pc98_keyboard::PC98Keyboard,
         mda::{self, MDACard},
         mouse::*,
         pic::*,
@@ -284,6 +285,7 @@ pub enum IoDeviceType {
     A0Register,
     Ppi,
     Pit,
+    PC98Keyboard,
     DmaPrimary,
     DmaSecondary,
     PicPrimary,
@@ -385,6 +387,7 @@ pub struct BusInterface {
     machine_desc: Option<MachineDescriptor>,
     keyboard_type: KeyboardType,
     keyboard: Option<Keyboard>,
+    pc98_keyboard: Option<PC98Keyboard>,
     conventional_size: usize,
     memory: Vec<u8>,
     memory_mask: Vec<u8>,
@@ -557,6 +560,7 @@ impl Default for BusInterface {
             machine_desc: None,
             keyboard_type: KeyboardType::ModelF,
             keyboard: None,
+            pc98_keyboard: None,
             conventional_size: ADDRESS_SPACE,
             memory: vec![0; ADDRESS_SPACE],
             memory_mask: vec![0; ADDRESS_SPACE],
@@ -1904,6 +1908,13 @@ impl BusInterface {
             self.keyboard = Some(keyboard);
         }
 
+        // Create PC98 keyboard if needed.
+        if machine_desc.machine_type == MachineType::NecPC9801F {
+            let pc98_keyboard = PC98Keyboard::new();
+            add_io_device!(self, pc98_keyboard, IoDeviceType::PC98Keyboard);
+            self.pc98_keyboard = Some(pc98_keyboard);
+        }
+
         // Create FDC if specified.
         if let Some(fdc_config) = &machine_config.fdc {
             let floppy_ct = fdc_config.drive.len();
@@ -2162,6 +2173,8 @@ impl BusInterface {
                             }
                         }
                     }
+                } else if let Some(pc98_keyboard) = &mut self.pc98_keyboard {
+                    pc98_keyboard.send_keyboard(kb_byte);
                 }
             }
         }
@@ -2204,6 +2217,10 @@ impl BusInterface {
 
         // There will always be a PIC, so safe to unwrap.
         let pic = self.pic1.as_mut().unwrap();
+
+        if let Some(pc98_keyboard) = &mut self.pc98_keyboard {
+            pc98_keyboard.run(pic, us);
+        }
 
         pic.run(sys_ticks);
 
@@ -2507,6 +2524,11 @@ impl BusInterface {
             pic2.reset();
         }
 
+        // Reset PC98 Keyboard
+        if let Some(pc98_keyboard) =self.pc98_keyboard.as_mut() {
+            pc98_keyboard.reset();
+        }
+
         // Reset DMA
         if let Some(dma1) = self.dma1.as_mut() {
             dma1.reset();
@@ -2554,6 +2576,11 @@ impl BusInterface {
                 IoDeviceType::Ppi => {
                     if let Some(ppi) = &mut self.ppi {
                         byte = Some(ppi.read_u8(port, nul_delta));
+                    }
+                }
+                IoDeviceType::PC98Keyboard => {
+                    if let Some(pc98_keyboard) = &mut self.pc98_keyboard {
+                        byte = Some(pc98_keyboard.read_u8(port, nul_delta));
                     }
                 }
                 IoDeviceType::Pit => {
@@ -2704,6 +2731,13 @@ impl BusInterface {
                         ppi.write_u8(port, data, Some(self), nul_delta);
                         resolved = true;
                         self.ppi = Some(ppi);
+                    }
+                }
+                IoDeviceType::PC98Keyboard => {
+                    if let Some(mut pc98_keyboard) = self.pc98_keyboard.take() {
+                        pc98_keyboard.write_u8(port, data, Some(self), nul_delta);
+                        resolved = true;
+                        self.pc98_keyboard = Some(pc98_keyboard);
                     }
                 }
                 IoDeviceType::Pit => {

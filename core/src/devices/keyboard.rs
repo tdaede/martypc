@@ -51,6 +51,7 @@ pub enum KeyboardType {
     ModelF,
     ModelM,
     Tandy1000,
+    PC98,
 }
 
 impl FromStr for KeyboardType {
@@ -63,6 +64,7 @@ impl FromStr for KeyboardType {
             "ModelF" => Ok(KeyboardType::ModelF),
             "ModelM" => Ok(KeyboardType::ModelM),
             "Tandy1000" => Ok(KeyboardType::Tandy1000),
+            "PC98" => Ok(KeyboardType::PC98),
             _ => Err("Bad value for keyboard_type".to_string()),
         }
     }
@@ -138,6 +140,7 @@ pub struct KeyboardMappingFile {
 pub struct KeyboardDefinition {
     modelf:    ModelF,
     tandy1000: Tandy1000,
+    pc98:      PC98,
 }
 
 #[derive(Debug, Deserialize)]
@@ -147,6 +150,11 @@ pub struct ModelF {
 
 #[derive(Debug, Deserialize)]
 pub struct Tandy1000 {
+    keycode_mappings: Vec<KeycodeMapping>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PC98 {
     keycode_mappings: Vec<KeycodeMapping>,
 }
 
@@ -252,6 +260,9 @@ impl Keyboard {
             }
             KeyboardType::Tandy1000 => {
                 self.keycode_mappings = toml_mapping.keyboard.tandy1000.keycode_mappings;
+            }
+            KeyboardType::PC98 => {
+                self.keycode_mappings = toml_mapping.keyboard.pc98.keycode_mappings;
             }
             _ => unimplemented!(),
         }
@@ -556,6 +567,122 @@ impl Keyboard {
                     scancodes.push(s);
                 }
             }
+            KeyboardType::PC98 => {
+                // There are various PC98 keyboards, this is based on the PC-9801-106
+                // TODO: typematic on PC98 sends an up keycode followed by down keycode
+                let scancode = match key_code {
+                    MartyKey::F1 => Some(0x62),
+                    MartyKey::F2 => Some(0x63),
+                    MartyKey::F3 => Some(0x64),
+                    MartyKey::F4 => Some(0x65),
+                    MartyKey::F5 => Some(0x66),
+                    MartyKey::F6 => Some(0x67),
+                    MartyKey::F7 => Some(0x68),
+                    MartyKey::F8 => Some(0x69),
+                    MartyKey::F9 => Some(0x6a),
+                    MartyKey::F10 => Some(0x6b),
+                    MartyKey::F11 => Some(0x52), // VF1
+                    MartyKey::F12 => Some(0x53), // VF2
+                    MartyKey::F13 => Some(0x54), // VF3
+                    MartyKey::F14 => Some(0x55), // VF4
+                    MartyKey::F15 => Some(0x56), // VF5
+                    MartyKey::Escape => Some(0x00),
+                    MartyKey::Tab => Some(0x0F),
+                    MartyKey::ControlLeft => Some(0x74), // CTRL
+                    MartyKey::ShiftLeft => Some(0x70), // SHFT
+                    MartyKey::AltLeft => Some(0x51), // NFER
+                    MartyKey::ControlRight => Some(0x74), // CTRL
+                    MartyKey::AltRight => Some(0x35), // XFER
+                    MartyKey::Digit1 => Some(0x01),
+                    MartyKey::Digit2 => Some(0x02),
+                    MartyKey::Digit3 => Some(0x03),
+                    MartyKey::Digit4 => Some(0x04),
+                    MartyKey::Digit5 => Some(0x05),
+                    MartyKey::Digit6 => Some(0x06),
+                    MartyKey::Digit7 => Some(0x07),
+                    MartyKey::Digit8 => Some(0x08),
+                    MartyKey::Digit9 => Some(0x09),
+                    MartyKey::Digit0 => Some(0x0A),
+                    MartyKey::Minus => Some(0x0B),
+                    MartyKey::Equal => Some(0x0C), // ^
+                    // TODO: insert JP106 yen here
+                    MartyKey::KeyA => Some(0x1d),
+                    MartyKey::KeyB => Some(0x2c),
+                    MartyKey::KeyC => Some(0x2b),
+                    MartyKey::KeyD => Some(0x1f),
+                    MartyKey::KeyE => Some(0x12),
+                    MartyKey::KeyF => Some(0x20),
+                    MartyKey::KeyG => Some(0x21),
+                    MartyKey::KeyH => Some(0x22),
+                    MartyKey::KeyI => Some(0x17),
+                    MartyKey::KeyJ => Some(0x23),
+                    MartyKey::KeyK => Some(0x24),
+                    MartyKey::KeyL => Some(0x25),
+                    MartyKey::KeyM => Some(0x2f),
+                    MartyKey::KeyN => Some(0x2e),
+                    MartyKey::KeyO => Some(0x18),
+                    MartyKey::KeyP => Some(0x19),
+                    MartyKey::KeyQ => Some(0x10),
+                    MartyKey::KeyR => Some(0x13),
+                    MartyKey::KeyS => Some(0x1e),
+                    MartyKey::KeyT => Some(0x14),
+                    MartyKey::KeyU => Some(0x16),
+                    MartyKey::KeyV => Some(0x2c),
+                    MartyKey::KeyW => Some(0x11),
+                    MartyKey::KeyX => Some(0x2a),
+                    MartyKey::KeyY => Some(0x15),
+                    MartyKey::KeyZ => Some(0x29),
+                    MartyKey::Backslash => Some(0x0d), // ￥
+                    MartyKey::Space => Some(0x34),
+                    MartyKey::Backspace => Some(0x0E), // BS
+                    MartyKey::BracketLeft => Some(0x1A), // @
+                    MartyKey::BracketRight => Some(0x1B), // [
+                    // TODO: add JP106 ]
+                    MartyKey::Semicolon => Some(0x26),
+                    MartyKey::Quote => Some(0x27), // :
+                    MartyKey::Comma => Some(0x30),
+                    MartyKey::Period => Some(0x31),
+                    MartyKey::Slash => Some(0x32),
+                    // TODO: add JP106 _
+                    MartyKey::Enter => Some(0x1C), // Return
+                    MartyKey::ShiftRight => Some(0x70), // SHFT
+                    MartyKey::CapsLock => Some(0x71),    // CAPS
+                    MartyKey::PrintScreen => Some(0x3f), // HELP
+                    MartyKey::Delete => Some(0x39),
+                    // TODO: add GRPH
+                    MartyKey::PageDown => Some(0x36), // ROLL UP
+                    MartyKey::PageUp => Some(0x37), // ROLL DOWN
+                    MartyKey::ArrowUp => Some(0x3a),
+                    MartyKey::ArrowLeft => Some(0x3b),
+                    MartyKey::ArrowRight => Some(0x3c),
+                    MartyKey::ArrowDown => Some(0x3d),
+                    // TODO: add kana
+                    MartyKey::NumLock => Some(0x3e), // HOME CLR
+                    MartyKey::Numpad0 => Some(0x4e),
+                    MartyKey::Numpad1 => Some(0x4a),
+                    MartyKey::Numpad2 => Some(0x4b),
+                    MartyKey::Numpad3 => Some(0x4c),
+                    MartyKey::Numpad4 => Some(0x46),
+                    MartyKey::Numpad5 => Some(0x47),
+                    MartyKey::Numpad6 => Some(0x48),
+                    MartyKey::Numpad7 => Some(0x42),
+                    MartyKey::Numpad8 => Some(0x43),
+                    MartyKey::Numpad9 => Some(0x44),
+                    MartyKey::NumpadSubtract => Some(0x40),
+                    MartyKey::NumpadAdd => Some(0x49),
+                    MartyKey::NumpadDecimal => Some(0x50),
+                    MartyKey::NumpadEnter => Some(0x1C),
+                    MartyKey::NumpadDivide => Some(0x41),
+                    MartyKey::NumpadMultiply => Some(0x45),
+                    MartyKey::NumpadEqual => Some(0x4d),
+                    _ => None,
+                };
+
+                if let Some(s) = scancode {
+                    //log::debug!("Converted key: {:?} to scancode: {:02X}", key_code, s);
+                    scancodes.push(s);
+                }
+                        }
             _ => {
                 unimplemented!();
             }
@@ -768,7 +895,7 @@ impl Keyboard {
     /// Convert a translated scancode sequence to its corresponding keyup sequence.
     fn translate_keyup(&self, kb_type: KeyboardType, translation: &mut [u8]) {
         match kb_type {
-            KeyboardType::ModelF | KeyboardType::Tandy1000 => {
+            KeyboardType::ModelF | KeyboardType::Tandy1000 | KeyboardType::PC98=> {
                 // ModelF has no keyboard buffer, therefore, translations should only have one keycode.
                 assert_eq!(translation.len(), 1);
 

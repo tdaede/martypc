@@ -264,3 +264,11 @@ keycode_mappings = []
 # should only have one element.
 [keyboard.tandy1000]
 keycode_mappings = []
+
+# -----------------------------------------------------------------------------
+# PC98 - The NEC PC-9801-106 keyboard
+# -----------------------------------------------------------------------------
+# The PC98 keyboard has single-byte scancodes, so scancodes defined here
+# should only have one element.
+[keyboard.pc98]
+keycode_mappings = []

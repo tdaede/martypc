@@ -36,6 +36,9 @@ name = "pc9801f"
 type = "NecPC9801F"
 rom_set = "pc9801f"
 speaker = false
+overlays = [
+    "us_pc98_keyboard",
+]
 
     [machine.memory]
     conventional.size = 0x20000 # 128KB max. Install additional RAM via sidecars

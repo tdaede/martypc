@@ -63,6 +63,16 @@ name = "us_modelf_keyboard"
     typematic_delay = 500.0
     # Delay in milliseconds between each scancode during typematic repeat.
     typematic_rate= 50.0
+
+[[overlay]]
+name = "us_pc98_keyboard"
+    [overlay.keyboard]
+    type = "PC98"
+    layout = "US"
+    # TODO: measure exact rate of PC-9801-106 keyboard
+    typematic = true
+    typematic_delay = 500.0
+    typematic_rate= 50.0
     
 [[overlay]]
 name = "pcxt_2_serial_ports"

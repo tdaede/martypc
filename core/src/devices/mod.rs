@@ -43,6 +43,7 @@ pub mod floppy_drive;
 pub mod game_port;
 pub mod hdc;
 pub mod keyboard;
+pub mod pc98_keyboard;
 pub mod lotech_ems;
 pub mod lpt_card;
 pub mod lpt_port;
