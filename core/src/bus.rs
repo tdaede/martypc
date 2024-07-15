@@ -63,6 +63,7 @@ use crate::{
         pic::*,
         pit::Pit,
         ppi::*,
+        pc98_system_port::*,
         serial::*,
     },
     machine::{KeybufferEntry, MachineCheckpoint, MachinePatch},
@@ -284,6 +285,7 @@ impl MemRangeDescriptor {
 pub enum IoDeviceType {
     A0Register,
     Ppi,
+    PC98SystemPort,
     Pit,
     PC98Keyboard,
     DmaPrimary,
@@ -403,6 +405,7 @@ pub struct BusInterface {
     io_desc_map: FxHashMap<u16, String>,
     io_stats: FxHashMap<u16, (bool, IoDeviceStats)>,
     ppi: Option<Ppi>,
+    pc98_system_port: Option<PC98SystemPort>,
     a0: Option<A0Register>,
     a0_data: u8,
     nmi_latch: bool,
@@ -576,6 +579,7 @@ impl Default for BusInterface {
             io_desc_map: FxHashMap::default(),
             io_stats: FxHashMap::default(),
             ppi: None,
+            pc98_system_port: None,
             a0: None,
             a0_data: 0,
             nmi_latch: false,
@@ -1836,6 +1840,12 @@ impl BusInterface {
             add_io_device!(self, self.ppi.as_mut().unwrap(), IoDeviceType::Ppi);
         }
 
+        if machine_desc.machine_type == MachineType::NecPC9801F {
+            self.pc98_system_port = Some(PC98SystemPort::new());
+            add_io_device!(self, self.pc98_system_port.as_mut().unwrap(),
+                           IoDeviceType::PC98SystemPort);
+        }
+
         // Create the crossbeam channel for the PIT to send sound samples to the sound output thread.
         let pit_sample_sender = if machine_config.speaker {
             // Add this sound source.
@@ -2672,6 +2682,11 @@ impl BusInterface {
                         byte = Some(adlib.read_u8(port, nul_delta));
                     }
                 }
+                IoDeviceType::PC98SystemPort => {
+                    if let Some(pc98_system_port) = &mut self.pc98_system_port {
+                        byte = Some(pc98_system_port.read_u8(port, nul_delta));
+                    }
+                }
                 _ => {}
             }
         }
@@ -2851,6 +2866,11 @@ impl BusInterface {
                 IoDeviceType::Sound => {
                     if let Some(adlib) = &mut self.adlib {
                         IoDevice::write_u8(adlib, port, data, None, nul_delta);
+                    }
+                }
+                IoDeviceType::PC98SystemPort => {
+                    if let Some(pc98_system_port) = &mut self.pc98_system_port {
+                        IoDevice::write_u8(pc98_system_port, port, data, None, nul_delta);
                     }
                 }
                 _ => {}
