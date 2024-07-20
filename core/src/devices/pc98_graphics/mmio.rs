@@ -73,7 +73,6 @@ impl MemoryMappedDevice for PC98Graphics {
     }
 
     fn mmio_write_u8(&mut self, address: usize, byte: u8, _cycles: u32, _cpumem: Option<&mut [u8]>) -> u32 {
-        println!("write to vram!");
         match address {
             0xa0000..=0xa3fff =>
                 self.tvmem[address - 0xa0000] = byte,

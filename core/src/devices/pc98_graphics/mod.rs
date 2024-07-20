@@ -52,7 +52,10 @@ use crate::{
     devices::pic::Pic,
 };
 
-const GDC_WCLK: f64 = 21.0526 / 8.0;
+// text gdc runs at 2.5mhz for 40 column, 5mhz for 80 column
+// graphics gdc 2.5 or 5mhz
+// todo: figure out which register controls text gdc clock rate
+const GDC_WCLK: f64 = 21.0526 / 16.0; // 2.5mhz clock = 1.25mhz wclk
 const US_PER_CLOCK: f64 = 1.0 / GDC_WCLK;
 const US_PER_FRAME: f64 = 1.0 / 50.0;
 
@@ -161,9 +164,10 @@ impl PC98Graphics {
 
     pub fn tick(&mut self, pic: &mut Option<Pic>) {
         self.tgdc.tick_wclk();
+        self.tgdc.tick_wclk();
         self.ggdc.tick_wclk();
-        // every WCLK, 8 pixels are transferred out to serializer
-        self.beam_x += 8;
+        // every WCLK, 16 pixels are transferred out to serializer
+        self.beam_x += 16;
         if self.beam_x >= 848 {
             self.beam_x = 0;
             self.scanline += 1;
