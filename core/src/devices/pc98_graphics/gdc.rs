@@ -44,6 +44,8 @@ enum GDCState {
     SyncP6,
     SyncP7,
     SyncP8,
+    Zoom,
+    Pitch,
 }
 
 #[derive(Default)]
@@ -58,13 +60,16 @@ pub struct GDC {
     vs: u8, // vertical sync width
     hfp_minus1: u8, // horizontal front porch width - 1
     hbp_minus1: u8, // horizontal back porch width - 1
-    ph: bool, // high bit of pitch (TODO: combine with pitch)
+    pitch: u16, // pitch
     dh: bool, // drawing hold
     vfp: u8, // vertical front porch width
     vl: bool, // 0 = odd, 1 = even
     vh: bool, // status register indicates horizontal vs vertical blank
     al: u16, // active display lines per field
     vbp: u8, // vertical back porch width
+    zoom: u8,
+    started: bool,
+    wait: u8, // number of cycles to delay before processing next fifo
     address: u32, // 18 bit output address
 }
 
@@ -100,57 +105,81 @@ impl GDC {
         }
     }
     pub fn tick_wclk(&mut self) {
+        if self.wait > 0 {
+            self.wait -= 1;
+            return;
+        }
         if let Some(b) = self.fifo.pop_front() {
             match b {
                 0b00000000 => {
                     eprintln!("GDC: got RESET1 command");
+                    self.wait = 2;
                     self.s = GDCState::SyncP1;
                 }
                 0b00000001 => {
                     eprintln!("GDC: got RESET2 command");
+                    self.wait = 2;
                     self.s = GDCState::SyncP1;
                 }
                 0b00010001 => {
                     eprintln!("GDC: got RESET3 command");
+                    self.wait = 2;
                     self.s = GDCState::SyncP1;
                 }
                 0b00001100..=0b00001101 => {
                     eprintln!("GDC: got BLANK1 command");
+                    self.wait = 2;
                 }
                 0b00000100..=0b00000101 => {
                     eprintln!("GDC: got BLANK2 command");
+                    self.wait = 2;
                 }
                 0b00001110..=0b00001111 => {
                     eprintln!("GDC: got SYNC command");
+                    self.wait = 2;
                     self.s = GDCState::SyncP1;
                 }
                 0b01101110..=0b01101111 => {
                     eprintln!("GDC: got VSYNC command");
+                    self.wait = 5;
                     // not emulated
+                    self.s = GDCState::Idle;
                 }
                 0b01001011 => {
                     eprintln!("GDC: got CCHAR command");
+                    self.wait = 4;
                 }
                 0b01101011 => {
                     eprintln!("GDC: got START command");
+                    self.started = true;
+                    self.wait = 5;
+                    self.s = GDCState::Idle;
                 }
                 0b01000110 => {
                     eprintln!("GDC: got ZOOM command");
+                    self.wait = 4;
+                    self.s = GDCState::Zoom;
                 }
                 0b01001001 => {
                     eprintln!("GDC: got CURS command");
+                    self.wait = 2;
                 }
                 0b01110000..=0b01111111 => {
                     eprintln!("GDC: got PRAM command");
+                    self.wait = 4;
                 }
                 0b01000111 => {
                     eprintln!("GDC: got PITCH command");
+                    self.wait = 4;
+                    self.s = GDCState::Pitch;
                 }
                 0b00100000..=0b00100011 |
                 0b00101000..=0b00101011 |
                 0b00110000..=0b00110011 |
                 0b00111000..=0b00111011 => {
                     eprintln!("GDC: got WDAT command");
+                    // TODO: different between word and byte writes
+                    self.wait = 5;
                 }
                 0b1_00000000..=0b1_11111111 => {
                     let p = b as u8;
@@ -175,7 +204,7 @@ impl GDC {
                         },
                         GDCState::SyncP5 => {
                             self.dh = p & 0b10000000 != 0;
-                            self.ph = p & 0b01000000 != 0;
+                            self.pitch = (self.pitch & 0xff) | (p as u16 & 0b01000000) << 2;
                             self.hbp_minus1 = p & 0b00111111;
                             self.s = GDCState::SyncP6;
                         },
@@ -196,6 +225,27 @@ impl GDC {
                             eprintln!("hs: {}, hfp: {}, aw: {}, hbp: {}", self.hs_minus1 + 1,
                                       self.hfp_minus1 + 1, self.aw_minus2 + 2, self.hbp_minus1 + 1);
                             eprintln!("vs: {}, vfp: {}, al: {}, vbp: {}", self.vs, self.vfp, self.al, self.vbp);
+                            if self.dh {
+                                eprintln!("GDC: drawing hold not implemented!");
+                            }
+                            if self.vl {
+                                eprintln!("GDC: even number of scan lines not supported!");
+                            }
+                            if !self.vh {
+                                eprintln!("GDC: status register indicating hblank not supported!");
+                            }
+                            self.s = GDCState::Idle;
+                        }
+                        GDCState::Zoom => {
+                            self.zoom = p;
+                            if self.zoom != 0 {
+                                eprintln!("GDC: zoom unsupported!");
+                            }
+                            self.s = GDCState::Idle;
+                        }
+                        GDCState::Pitch => {
+                            self.pitch = (self.pitch & 0x100) | (p as u16);
+                            eprintln!("GDC: pitch set to {}", self.pitch);
                             self.s = GDCState::Idle;
                         }
                         _ => {
