@@ -1840,7 +1840,7 @@ impl BusInterface {
             add_io_device!(self, self.ppi.as_mut().unwrap(), IoDeviceType::Ppi);
         }
 
-        if machine_desc.machine_type == MachineType::NecPC9801F {
+        if machine_desc.machine_type.is_pc98() {
             self.pc98_system_port = Some(PC98SystemPort::new());
             add_io_device!(self, self.pc98_system_port.as_mut().unwrap(),
                            IoDeviceType::PC98SystemPort);
@@ -1919,7 +1919,7 @@ impl BusInterface {
         }
 
         // Create PC98 keyboard if needed.
-        if machine_desc.machine_type == MachineType::NecPC9801F {
+        if machine_desc.machine_type.is_pc98() {
             let pc98_keyboard = PC98Keyboard::new();
             add_io_device!(self, pc98_keyboard, IoDeviceType::PC98Keyboard);
             self.pc98_keyboard = Some(pc98_keyboard);

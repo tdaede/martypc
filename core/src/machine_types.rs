@@ -46,6 +46,15 @@ pub enum MachineType {
     NecPC9801F,
 }
 
+impl MachineType {
+    pub const fn is_pc98(&self) -> bool {
+        match self {
+            MachineType::NecPC9801F => true,
+            _ => false,
+        }
+    }
+}
+
 impl FromStr for MachineType {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, String>
