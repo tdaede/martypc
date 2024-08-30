@@ -44,12 +44,14 @@ pub enum MachineType {
     IbmPCJr,
     Tandy1000,
     NecPC9801F,
+    NecPC9801VM,
 }
 
 impl MachineType {
     pub const fn is_pc98(&self) -> bool {
         match self {
             MachineType::NecPC9801F => true,
+            MachineType::NecPC9801VM => true,
             _ => false,
         }
     }
@@ -69,6 +71,7 @@ impl FromStr for MachineType {
             "ibm_pcjr" => Ok(MachineType::IbmPCJr),
             "tandy1000" => Ok(MachineType::Tandy1000),
             "necpc9801f" => Ok(MachineType::NecPC9801F),
+            "necpc9801vm" => Ok(MachineType::NecPC9801VM),
             _ => Err("Bad value for model".to_string()),
         }
     }

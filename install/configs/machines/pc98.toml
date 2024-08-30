@@ -57,3 +57,33 @@ overlays = [
             # Drives connected to controller. Maximum of 1.
 #            [[machine.fdc.drive]]
 #            type  = "360k"
+
+[[machine]]
+name = "pc9801vm"
+type = "NecPC9801VM"
+rom_set = "pc9801vm"
+speaker = false
+overlays = [
+    "us_pc98_keyboard",
+]
+
+    [machine.cpu]
+    upgrade_type = "NecV20"
+
+    [machine.memory]
+    conventional.size = 0xA0000 # 640KB
+    conventional.wait_states = 3
+
+    # Video cards - Maximum of 1.
+    [[machine.video]]
+    bus_type = "Onboard"
+    type = "PC98"
+    clock_mode = "Default"
+
+    # Floppy disk controller
+#    [machine.fdc]
+#        bus_type = "Onboard"
+#        type = "IbmPCJrNec"
+            # Drives connected to controller. Maximum of 1.
+#            [[machine.fdc.drive]]
+#            type  = "360k"

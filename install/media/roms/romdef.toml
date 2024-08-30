@@ -181,3 +181,11 @@ provides = ["bios", "ibm5160"]
 rom = [ 
     { filename = "bios.bin", addr = 0xe8000, size = 0x18000 },
 ]
+
+[[romset]]
+alias = "pc9801vm"
+priority = 1
+provides = ["bios", "ibm5160"]
+rom = [
+    { filename = "bios_vm.bin", addr = 0xe8000, size = 0x18000 },
+]

@@ -17,7 +17,7 @@ config_version = "0.2"
 # Specify the name of a machine configuration to load. Valid config_names
 # are defined via machine configuration profiles in the /configs/machines
 # directory.
-config_name = "pc9801f"
+config_name = "pc9801vm"
 #config_name = "ibm5160_hdd"
 
 # Specify configuration overlays to load on top of machine configuration.

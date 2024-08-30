@@ -469,6 +469,14 @@ lazy_static! {
                     have_ppi: false,
                     ..Default::default()
                 },
+            ),
+            (
+                MachineType::NecPC9801VM,
+                MachineDescriptor {
+                    machine_type: MachineType::NecPC9801VM,
+                    have_ppi: false,
+                    ..Default::default()
+                },
             )
         ]);
         map
