@@ -50,8 +50,8 @@ enum GDCState {
 
 #[derive(Default)]
 pub struct GDC {
-    x: u16,
-    y: u16,
+    pub x: u16,
+    pub y: u16,
     fifo: VecDeque<u16>, // high bit indicates paramter
     s: GDCState,
     mode: u8,
@@ -70,7 +70,8 @@ pub struct GDC {
     zoom: u8,
     started: bool,
     wait: u8, // number of cycles to delay before processing next fifo
-    address: u32, // 18 bit output address
+    pub address: u32, // 18 bit output address
+    pub blank: bool, // output blank signal
 }
 
 impl GDC {
@@ -105,6 +106,24 @@ impl GDC {
         }
     }
     pub fn tick_wclk(&mut self) {
+        // todo: this only works for text and I'm not sure it's accurate
+        // todo: take into account cchar register
+        self.address = ((self.y.saturating_sub(self.vbp as u16) / 16) as u32) * (self.aw_minus2 as u32 + 2)
+            + (self.x.saturating_sub(self.hbp_minus1 as u16 + 1) as u32)
+            + ((self.y.saturating_sub(self.vbp as u16) as u32 & 0xf) << 13);
+        // todo: use self.al rather than hardcoded 400 once 24khz is supported correctly
+        self.blank = (self.y < self.vbp as u16 || self.y >= self.vbp as u16 + 400 as u16) ||
+            (self.x < self.hbp_minus1 as u16 + 1 || self.x >= self.hbp_minus1 as u16 + 1 + self.aw_minus2 as u16 + 2);
+        self.x += 1;
+        // todo: make this condition dependent on register parameters
+        if self.x >= (848/8) {
+            self.x = 0;
+            self.y += 1;
+        }
+        // todo: make this condition dependent on register parameters
+        if self.y >= 525 {
+            self.y = 0;
+        }
         if self.wait > 0 {
             self.wait -= 1;
             return;
@@ -258,14 +277,6 @@ impl GDC {
                     eprintln!("GDC: unknown command {:08b}", b);
                 }
             }
-        }
-        self.x += 1;
-        if self.x > (848/16) {
-            self.x = 0;
-            self.y += 1;
-        }
-        if self.y > 525 {
-            self.y = 0;
         }
     }
 }

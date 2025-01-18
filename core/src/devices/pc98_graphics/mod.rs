@@ -62,6 +62,8 @@ const US_PER_FRAME: f64 = 1.0 / 50.0;
 static DUMMY_PLANE: [u8; 1] = [0];
 static DUMMY_PIXEL: [u8; 4] = [0, 0, 0, 0];
 
+const PC98_FONT: &'static [u8] = include_bytes!("../../../../assets/FONT.ROM");
+
 const PC98_APERTURES: [DisplayAperture; 1] = [
     DisplayAperture {
         w: 640,
@@ -72,7 +74,7 @@ const PC98_APERTURES: [DisplayAperture; 1] = [
     },
 ];
 
-const CROPPED_STRING: &str = &formatcp!("Cropped: 640x480");
+const CROPPED_STRING: &str = &formatcp!("Cropped: 640x400");
 
 const PC98_APERTURE_DESCS: [DisplayApertureDesc; 1] = [
     DisplayApertureDesc {
@@ -162,9 +164,26 @@ impl PC98Graphics {
         }
     }
 
+    fn draw_char(&mut self, beam_x: u32) {
+        if !self.tgdc.blank {
+            let char_code: u16 = self.tvmem[(self.tgdc.address & 0x1fff) as usize * 2] as u16;
+            let b: u8 = PC98_FONT[char_code as usize * 16 + (self.tgdc.address >> 13) as usize + 0x800];
+            for x in 0..8 {
+                let p = if (b >> (7-x)) & 1 == 1 { 15 } else { 0 };
+                let buf_addr: i32 = 640* (self.scanline as i32).saturating_sub(37) + (beam_x as i32 + x as i32).saturating_sub(112);
+                if buf_addr >= 0 && buf_addr < 640*400 {
+                    self.buf[0][buf_addr as usize] = p;
+                }
+            }
+        }
+    }
+
     pub fn tick(&mut self, pic: &mut Option<Pic>) {
+        // in 80 column mode, tgdc runs at 5mhz
         self.tgdc.tick_wclk();
+        self.draw_char(self.beam_x);
         self.tgdc.tick_wclk();
+        self.draw_char(self.beam_x + 8);
         self.ggdc.tick_wclk();
         // every WCLK, 16 pixels are transferred out to serializer
         self.beam_x += 16;
