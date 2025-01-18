@@ -424,7 +424,7 @@ aspect_correction = true
 
 # Aspect ratio to use, representing a w:h ratio. Both fields should be 
 # integers.
-aspect_ratio = { h = 4, v = 3 }
+aspect_ratio = { h = 16, v = 10 }
 
 # Emulate a composite color signal (and produce artifact color)
 # Has no effect unless card type is CGA.
