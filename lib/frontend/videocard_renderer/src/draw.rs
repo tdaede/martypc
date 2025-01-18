@@ -125,13 +125,15 @@ impl VideoRenderer {
                 self.params.aperture,
                 extents,
                 ),
-            VideoType::PC98 => VideoRenderer::draw_cga_direct_u32(
+            #[cfg(feature = "ega")]
+            VideoType::PC98 => VideoRenderer::draw_ega_direct_u32(
                 first_pass_buf,
                 self.params.render.w,
                 self.params.render.h,
                 input_buf,
                 self.params.aperture,
                 extents,
+                RenderBpp::Four,
             ),
         }
 
