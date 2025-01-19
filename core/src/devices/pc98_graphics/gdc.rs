@@ -83,6 +83,7 @@ pub struct GDC {
     sc: bool, // steady cursor
     br: u8, // 5 bit blink rate
     cbot: u8, // 5 bit bottom cursor line
+    blink_counter: u8, // cursor blink counter (frame counter)
     wait: u8, // number of cycles to delay before processing next fifo
     pub address: u32, // 18 bit output address
     pub blank: bool, // output blank signal
@@ -131,7 +132,8 @@ impl GDC {
             (self.x < self.hbp_minus1 as u16 + 1 || self.x >= self.hbp_minus1 as u16 + 1 + self.aw_minus2 as u16 + 2);
         // todo: correct for graphics mode
         self.cursor_active = ((self.address & 0x1fff) == self.ead) &&
-            self.dc; // &&
+            self.dc &&
+            ((self.blink_counter & (0b10 << self.br) == 0) || self.sc); // &&
             //(self.address >> 13) as u8 >= self.ctop &&
             //(self.address >> 13) as u8 <= self.cbot;
         self.x += 1;
@@ -143,6 +145,7 @@ impl GDC {
         // todo: make this condition dependent on register parameters
         if self.y >= 525 {
             self.y = 0;
+            self.blink_counter += 1;
         }
         if self.wait > 0 {
             self.wait -= 1;
