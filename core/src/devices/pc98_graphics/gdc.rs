@@ -46,6 +46,9 @@ enum GDCState {
     SyncP8,
     Zoom,
     Pitch,
+    CursP1,
+    CursP2,
+    CursP3,
 }
 
 #[derive(Default)]
@@ -69,9 +72,12 @@ pub struct GDC {
     vbp: u8, // vertical back porch width
     zoom: u8,
     started: bool,
+    ead: u32, // 18 bit cursor address
+    dad: u8, // 4 bit dot address set by curs
     wait: u8, // number of cycles to delay before processing next fifo
     pub address: u32, // 18 bit output address
     pub blank: bool, // output blank signal
+    pub cursor_active: bool, // whether cursor should override text output
 }
 
 impl GDC {
@@ -114,6 +120,8 @@ impl GDC {
         // todo: use self.al rather than hardcoded 400 once 24khz is supported correctly
         self.blank = (self.y < self.vbp as u16 || self.y >= self.vbp as u16 + 400 as u16) ||
             (self.x < self.hbp_minus1 as u16 + 1 || self.x >= self.hbp_minus1 as u16 + 1 + self.aw_minus2 as u16 + 2);
+        // todo: correct for graphics mode
+        self.cursor_active = (self.address & 0x1fff) == self.ead;
         self.x += 1;
         // todo: make this condition dependent on register parameters
         if self.x >= (848/8) {
@@ -167,6 +175,8 @@ impl GDC {
                 0b01001011 => {
                     eprintln!("GDC: got CCHAR command");
                     self.wait = 4;
+                    // not emulated
+                    self.s = GDCState::Idle;
                 }
                 0b01101011 => {
                     eprintln!("GDC: got START command");
@@ -182,6 +192,7 @@ impl GDC {
                 0b01001001 => {
                     eprintln!("GDC: got CURS command");
                     self.wait = 2;
+                    self.s = GDCState::CursP1;
                 }
                 0b01110000..=0b01111111 => {
                     eprintln!("GDC: got PRAM command");
@@ -265,6 +276,22 @@ impl GDC {
                         GDCState::Pitch => {
                             self.pitch = (self.pitch & 0x100) | (p as u16);
                             eprintln!("GDC: pitch set to {}", self.pitch);
+                            self.s = GDCState::Idle;
+                        }
+                        GDCState::CursP1 => {
+                            // todo: determine if partial writes to ead are visible
+                            self.ead = (self.ead & 0x3FF00) | p as u32;
+                            self.s = GDCState::CursP2;
+                        }
+                        GDCState::CursP2 => {
+                            self.ead = (self.ead & 0x300FF) | ((p as u32) << 8);
+                            eprintln!("GDC: cursor address set to {}", self.ead);
+                            self.s = GDCState::CursP3;
+                        }
+                        GDCState::CursP3 => {
+                            self.ead = (self.ead & 0x0FFFF) | (((p as u32) & 0x3) << 16);
+                            self.dad = p >> 4;
+                            eprintln!("GDC: cursor address set to {} and dot address to {}", self.ead, self.dad);
                             self.s = GDCState::Idle;
                         }
                         _ => {

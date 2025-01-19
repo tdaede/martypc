@@ -169,7 +169,11 @@ impl PC98Graphics {
             let char_code: u16 = self.tvmem[(self.tgdc.address & 0x1fff) as usize * 2] as u16;
             let b: u8 = PC98_FONT[char_code as usize * 16 + (self.tgdc.address >> 13) as usize + 0x800];
             for x in 0..8 {
-                let p = if (b >> (7-x)) & 1 == 1 { 15 } else { 0 };
+                let p = if self.tgdc.cursor_active {
+                    15
+                } else {
+                    if (b >> (7-x)) & 1 == 1 { 15 } else { 0 }
+                };
                 let buf_addr: i32 = 640* (self.scanline as i32).saturating_sub(37) + (beam_x as i32 + x as i32).saturating_sub(112);
                 if buf_addr >= 0 && buf_addr < 640*400 {
                     self.buf[0][buf_addr as usize] = p;
