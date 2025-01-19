@@ -199,7 +199,7 @@ impl WgpuDisplayManager {
         let event_loop = EventLoop::new().expect("Failed to create winit event loop!");
 
         // We need to poll to drive events so that the emulator keeps running.
-        event_loop.set_control_flow(ControlFlow::Poll);
+        event_loop.set_control_flow(ControlFlow::Wait);
 
         Self {
             event_loop: Some(event_loop),

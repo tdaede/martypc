@@ -49,6 +49,9 @@ enum GDCState {
     CursP1,
     CursP2,
     CursP3,
+    CCharP1,
+    CCharP2,
+    CCharP3,
 }
 
 #[derive(Default)]
@@ -74,6 +77,12 @@ pub struct GDC {
     started: bool,
     ead: u32, // 18 bit cursor address
     dad: u8, // 4 bit dot address set by curs
+    lr: u8, // 5 bit lines per character row
+    dc: bool, // display cursor
+    ctop: u8, // 5 bit top cursor line
+    sc: bool, // steady cursor
+    br: u8, // 5 bit blink rate
+    cbot: u8, // 5 bit bottom cursor line
     wait: u8, // number of cycles to delay before processing next fifo
     pub address: u32, // 18 bit output address
     pub blank: bool, // output blank signal
@@ -121,7 +130,10 @@ impl GDC {
         self.blank = (self.y < self.vbp as u16 || self.y >= self.vbp as u16 + 400 as u16) ||
             (self.x < self.hbp_minus1 as u16 + 1 || self.x >= self.hbp_minus1 as u16 + 1 + self.aw_minus2 as u16 + 2);
         // todo: correct for graphics mode
-        self.cursor_active = (self.address & 0x1fff) == self.ead;
+        self.cursor_active = ((self.address & 0x1fff) == self.ead) &&
+            self.dc; // &&
+            //(self.address >> 13) as u8 >= self.ctop &&
+            //(self.address >> 13) as u8 <= self.cbot;
         self.x += 1;
         // todo: make this condition dependent on register parameters
         if self.x >= (848/8) {
@@ -175,8 +187,7 @@ impl GDC {
                 0b01001011 => {
                     eprintln!("GDC: got CCHAR command");
                     self.wait = 4;
-                    // not emulated
-                    self.s = GDCState::Idle;
+                    self.s = GDCState::CCharP1;
                 }
                 0b01101011 => {
                     eprintln!("GDC: got START command");
@@ -292,6 +303,24 @@ impl GDC {
                             self.ead = (self.ead & 0x0FFFF) | (((p as u32) & 0x3) << 16);
                             self.dad = p >> 4;
                             eprintln!("GDC: cursor address set to {} and dot address to {}", self.ead, self.dad);
+                            self.s = GDCState::Idle;
+                        }
+                        GDCState::CCharP1 => {
+                            self.lr = p & 0x1f;
+                            self.dc = (p & 0b10000000) != 0;
+                            self.s = GDCState::CCharP2;
+                        }
+                        GDCState::CCharP2 => {
+                            self.ctop = p & 0x1f;
+                            self.sc = (p & 0b00100000) != 0;
+                            self.br = (self.br & 0b00011000) | (p >> 6);
+                            self.s = GDCState::CCharP3;
+                        }
+                        GDCState::CCharP3 => {
+                            self.br = (self.br & 0b00000111) | (p & 0x7);
+                            self.cbot = p >> 3;
+                            eprintln!("GDC: Cursor characteristics lr: {} dc: {} ctop: {} sc: {} br: {} cbot: {}",
+                                      self.lr, self.dc, self.ctop, self.sc, self.br, self.cbot);
                             self.s = GDCState::Idle;
                         }
                         _ => {
