@@ -607,7 +607,7 @@ impl Keyboard {
                     MartyKey::Equal => Some(0x0C), // ^
                     // TODO: insert JP106 yen here
                     MartyKey::KeyA => Some(0x1d),
-                    MartyKey::KeyB => Some(0x2c),
+                    MartyKey::KeyB => Some(0x2d),
                     MartyKey::KeyC => Some(0x2b),
                     MartyKey::KeyD => Some(0x1f),
                     MartyKey::KeyE => Some(0x12),
