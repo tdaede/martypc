@@ -41,8 +41,8 @@ overlays = [
 ]
 
     [machine.memory]
-    conventional.size = 0x20000 # 128KB max. Install additional RAM via sidecars
-    conventional.wait_states = 3
+    conventional.size = 0x20000
+    conventional.wait_states = 0
 
     # Video cards - Maximum of 1.
     [[machine.video]]
@@ -72,7 +72,7 @@ overlays = [
 
     [machine.memory]
     conventional.size = 0xA0000 # 640KB
-    conventional.wait_states = 3
+    conventional.wait_states = 0
 
     # Video cards - Maximum of 1.
     [[machine.video]]

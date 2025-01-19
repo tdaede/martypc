@@ -466,6 +466,9 @@ lazy_static! {
                 MachineType::NecPC9801F,
                 MachineDescriptor {
                     machine_type: MachineType::NecPC9801F,
+                    system_crystal: 5.0,
+                    cpu_factor: ClockFactor::Divisor(1),
+                    bus_crystal: 5.0,
                     have_ppi: false,
                     ..Default::default()
                 },
@@ -474,6 +477,9 @@ lazy_static! {
                 MachineType::NecPC9801VM,
                 MachineDescriptor {
                     machine_type: MachineType::NecPC9801VM,
+                    system_crystal: 10.0,
+                    cpu_factor: ClockFactor::Divisor(1),
+                    bus_crystal: 10.0,
                     have_ppi: false,
                     ..Default::default()
                 },
