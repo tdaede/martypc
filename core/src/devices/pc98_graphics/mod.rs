@@ -95,7 +95,7 @@ pub struct PC98Graphics {
     extents: DisplayExtents,
     back_buf: usize,
     front_buf: usize,
-    tvmem: Box<[u8; 0x4000]>,
+    tvmem: Box<[u8; 0x4000]>, // todo: attr part of tvmem only has even bytes
     gvmem: Box<[u8; 0x20000]>, // 4 planes sequential
     tgdc: GDC,
     ggdc: GDC,
@@ -167,12 +167,17 @@ impl PC98Graphics {
     fn draw_char(&mut self, beam_x: u32) {
         if !self.tgdc.blank {
             let char_code: u16 = self.tvmem[(self.tgdc.address & 0x1fff) as usize * 2] as u16;
+            let attr: u8 = self.tvmem[(self.tgdc.address & 0x1fff) as usize * 2 + 0x2000];
             let b: u8 = PC98_FONT[char_code as usize * 16 + (self.tgdc.address >> 13) as usize + 0x800];
             for x in 0..8 {
                 let p = if self.tgdc.cursor_active {
                     15
                 } else {
-                    if (b >> (7-x)) & 1 == 1 { 15 } else { 0 }
+                    if (attr & 0b0000_0100) != 0 {
+                        if (b >> (7-x)) & 1 == 1 { 0 } else { 15 }
+                    } else {
+                        if (b >> (7-x)) & 1 == 1 { 15 } else { 0 }
+                    }
                 };
                 let buf_addr: i32 = 640* (self.scanline as i32).saturating_sub(25) + (beam_x as i32 + x as i32).saturating_sub(8*8);
                 if buf_addr >= 0 && buf_addr < 640*400 {
