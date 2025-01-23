@@ -133,9 +133,9 @@ impl GDC {
         // todo: correct for graphics mode
         self.cursor_active = ((self.address & 0x1fff) == self.ead) &&
             self.dc &&
-            ((self.blink_counter & (0b10 << self.br) == 0) || self.sc); // &&
-            //(self.address >> 13) as u8 >= self.ctop &&
-            //(self.address >> 13) as u8 <= self.cbot;
+            ((self.blink_counter & (0b10 << self.br) == 0) || self.sc) &&
+            (self.address >> 13) as u8 >= self.ctop &&
+            (self.address >> 13) as u8 <= self.cbot;
         self.x += 1;
         // todo: make this condition dependent on register parameters
         if self.x >= (848/8) {
