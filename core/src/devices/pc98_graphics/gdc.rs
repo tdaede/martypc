@@ -127,8 +127,7 @@ impl GDC {
         self.address = ((self.y.saturating_sub(self.vbp as u16) / 16) as u32) * (self.aw_minus2 as u32 + 2)
             + (self.x.saturating_sub(self.hbp_minus1 as u16 + 1) as u32)
             + ((self.y.saturating_sub(self.vbp as u16) as u32 & 0xf) << 13);
-        // todo: use self.al rather than hardcoded 400 once 24khz is supported correctly
-        self.blank = (self.y < self.vbp as u16 || self.y >= self.vbp as u16 + 400 as u16) ||
+        self.blank = (self.y < self.vbp as u16 || self.y >= self.vbp as u16 + self.al as u16) ||
             (self.x < self.hbp_minus1 as u16 + 1 || self.x >= self.hbp_minus1 as u16 + 1 + self.aw_minus2 as u16 + 2);
         // todo: correct for graphics mode
         self.cursor_active = ((self.address & 0x1fff) == self.ead) &&
