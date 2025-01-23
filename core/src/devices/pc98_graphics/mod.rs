@@ -174,7 +174,7 @@ impl PC98Graphics {
                 } else {
                     if (b >> (7-x)) & 1 == 1 { 15 } else { 0 }
                 };
-                let buf_addr: i32 = 640* (self.scanline as i32).saturating_sub(37) + (beam_x as i32 + x as i32).saturating_sub(112);
+                let buf_addr: i32 = 640* (self.scanline as i32).saturating_sub(25) + (beam_x as i32 + x as i32).saturating_sub(8*8);
                 if buf_addr >= 0 && buf_addr < 640*400 {
                     self.buf[0][buf_addr as usize] = p;
                 }

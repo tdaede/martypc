@@ -79,6 +79,8 @@ pub const SYSTEM_PORT_B: u16 = 0x33;
 pub const SYSTEM_PORT_C: u16 = 0x35;
 pub const SYSTEM_COMMAND_PORT: u16 = 0x37;
 
+pub const DIP_SW1_CRTT: u8 = 0b0000_0001;
+
 pub const DIP_SW2_80_COLUMN: u8 = 0b0000_0100;
 pub const DIP_SW2_25_LINE: u8 = 0b0000_1000;
 
@@ -93,12 +95,14 @@ pub struct PC98SystemPort {
     port_cl_iomode: IoMode, // Port C Lower IO mode
     port_b_byte: u8,
     port_c_byte: u8,
+    dip_sw1: u8,
     dip_sw2: u8, // 1 means on
 }
 
 impl PC98SystemPort {
     pub fn new() -> Self {
         Self {
+            dip_sw1: DIP_SW1_CRTT, // 24khz CRT
             dip_sw2: DIP_SW2_80_COLUMN
                 | DIP_SW2_25_LINE,
             ..Default::default()
@@ -162,7 +166,7 @@ impl PC98SystemPort {
     }
 
     pub fn handle_portb_read(&self) -> u8 {
-        0
+        (self.dip_sw1 & DIP_SW1_CRTT) << 3
     }
 
     pub fn handle_portc_read(&self) -> u8 {
